@@ -1,7 +1,11 @@
+var editString = "";
+
 if (Meteor.is_client) {
   Template.hello.greeting = function () {
     return "Welcome to asteroid.";
   };
+
+  Template.hello.editString = editString;
 
   Template.hello.events = {
     'click input' : function () {
@@ -10,6 +14,10 @@ if (Meteor.is_client) {
         console.log("You pressed the button");
     }
   };
+
+  $('#editArea').keyup(function() {
+      editString = Template.hello.editString.value;
+  });
 }
 
 if (Meteor.is_server) {
