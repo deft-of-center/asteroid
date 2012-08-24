@@ -33,7 +33,7 @@ if (Meteor.is_client) {
   });
 
   Template.container.has_selected = function () {
-      return !Session.get("selected_doc");
+      return !Session.equals("selected_doc", undefined);
   };
 
 
@@ -46,10 +46,18 @@ if (Meteor.is_client) {
     }
   };
 
-  /*
+  Template.edit.docId = function () {
+      return Session.get("selected_doc");
+  };
+
   Template.edit.title = function () {
       var aDoc = Docs.findOne(Session.get("selected_doc"));
-      return aDoc.title;
+      if (aDoc) {
+          return aDoc.title;
+      } else {
+          console.log("Can't find a doc with the id.  Docs has " + Docs.find().count() + " entries.");
+          return "(Unknown)";
+      }
   };
 
   Template.edit.editString = function () {
@@ -57,6 +65,7 @@ if (Meteor.is_client) {
     return aDoc.body;
   };
 
+/*
   Template.edit.events = {
     'click input' : function () {
       // template data, if any, is available in 'this'
