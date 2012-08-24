@@ -25,37 +25,51 @@ function dump(arr,level) {
 
 
 
-var Docs = new Meteor.Collection("documents", null);
+Docs = new Meteor.Collection("documents", null);
+console.log("Docs has count " + Docs.find().count());
 //Temporary code.  Eventually each REST endpoint will be an Id.
-var docId = 1;
-Docs.insert({id:docId, title:"My Doc", body:"A Test"});
+var docId;
+if (Docs.find().count() === 0) {
+    docId = Docs.insert({title:"My Doc", body:"A Test"});
+    console.log("Adding doc with id " + docId);
+} else {
+    docId = Docs.findOne()._id;
+    console.log("Found doc with id " + docId);
+}
 
 
 if (Meteor.is_client) {
 
-  doc = Docs.findOne({id:docId});
+  var doc = Docs.findOne({_id:docId});
   Template.hello.title = function () {
-      return doc.title;
+      var aDoc = Docs.findOne({_id:docId});
+      return aDoc.title;
   };
   Template.hello.greeting = function () {
-    return "Welcome to asteroid.";
+    var aDoc = Docs.findOne({_id:docId});
+    return "Welcome to " + aDoc.title;
   };
 
   Template.hello.editString = function () {
-      return doc.body;
+    var aDoc = Docs.findOne({_id:docId});
+    return aDoc.body;
   };
 
   Template.hello.events = {
     'click input' : function () {
       // template data, if any, is available in 'this'
-      if (typeof console !== 'undefined')
-        console.log("You pressed the button");
+      doc.title += "!";
+      console.log("You pressed the button. title is now " + doc.title);
+      Docs.update({_id:docId}, {title:doc.title});
+      console.log("Database title is: " +  Docs.findOne({_id:docId}).title );
     }
   };
 
   $('#editArea').keyup(function() {
-      doc.body = Template.hello.editString.value;
-      Docs.update({id:doc.id}, {body:doc.body}); 
+      doc.body = $('editArea').val();
+      console.log("Setting doc body to :" + doc.body);
+      Docs.update({_id:docId}, {body:doc.body}); 
+      console.log("Database body is: " +  Docs.findOne({_id:docId}).body );
   });
 }
 
