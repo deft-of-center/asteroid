@@ -3,14 +3,42 @@
 </head>
 
 <body>
-  {{> hello}}
+  <div id="container">
+      {{> container}}
+  </div>
 </body>
 
-<template name="hello">
-<h1>{{title}}</h1>
-  {{greeting}}
+<template name="container">
+
+  {{> docs}}
+
+  <br />
+
+  {{#if false and has_selected }}
+  <!-- was template  edit -->
+  {{/if}}
+  
+</template>
+
+<template name="docs">
+<h2>Available documents</h2>
+{{#each documents}}
+  <ul>
+      {{> doc}}
+  </ul>
+{{/each}}
+</template>
+
+<template name="doc">
+<li>{{title}}</li>
+</template>
+
+<!--
+<template name="edit">
+<h2>{{title}}</h2>
   <textarea id="editArea" rows="20" cols="120">
   {{editString}}
   </textarea>
   <input type="button" value="Click" />
 </template>
+-->

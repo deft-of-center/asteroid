@@ -25,43 +25,47 @@ function dump(arr,level) {
 
 
 
-Docs = new Meteor.Collection("documents", null);
-console.log("Docs has count " + Docs.find().count());
-var docId;
-if (Docs.find().count() === 0) {
-  docId = Docs.insert({title:"My Doc", body:"A Test"});
-  console.log("Adding doc with id " + docId);
-} else {
-  docId = Docs.findOne()._id;
-  console.log("Found doc with id " + docId);
-}
-
+Docs = new Meteor.Collection("documents");
 
 if (Meteor.is_client) {
 
-  var doc = Docs.findOne(docId);
-  Template.hello.title = function () {
-      var aDoc = Docs.findOne(docId);
-      return aDoc.title;
-  };
-  Template.hello.greeting = function () {
-    var aDoc = Docs.findOne(docId);
-    return "Welcome to " + aDoc.title;
+  Meteor.startup(function () {
+  });
+
+  Template.container.has_selected = function () {
+      return !Session.get("selected_doc");
   };
 
-  Template.hello.editString = function () {
-    var aDoc = Docs.findOne(docId);
+
+  Template.docs.documents = Docs.find();
+  
+  Template.doc.events = {
+    'click': function () {
+      console.log("Selecting doc " + this._id);
+      Session.set("selected_doc", this._id);
+    }
+  };
+
+  /*
+  Template.edit.title = function () {
+      var aDoc = Docs.findOne(Session.get("selected_doc"));
+      return aDoc.title;
+  };
+
+  Template.edit.editString = function () {
+    var aDoc = Docs.findOne(Session.get("selected_doc"));
     return aDoc.body;
   };
 
-  Template.hello.events = {
+  Template.edit.events = {
     'click input' : function () {
       // template data, if any, is available in 'this'
+      var doc = Docs.findOne(Session.get("selected_doc"));
       doc.title += "!";
       console.log("You pressed the button. title is now " + doc.title);
-      Docs.update(docId, doc);
-      console.log("Database title is: " +  Docs.findOne(docId).title );
-      console.log("Database doc is: " + dump(Docs.findOne(docId)) );
+      Docs.update(Session.get("selected_doc"), doc);
+      console.log("Database title is: " +  Docs.findOne(Session.get("selected_doc")).title );
+      console.log("Database doc is: " + dump(Docs.findOne(Session.get("selected_doc"))) );
     }
   };
 
@@ -73,10 +77,14 @@ if (Meteor.is_client) {
           console.log("Database body is: " +  Docs.findOne(docId).body );
       });
   });
+*/
+
 }
 
 if (Meteor.is_server) {
   Meteor.startup(function () {
-    // code to run on server at startup
+    if (Docs.find().count() === 0) {
+        Docs.insert({title:"My Doc", body:"Some Text"});
+    }
   });
 }
