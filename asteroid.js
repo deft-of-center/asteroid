@@ -27,31 +27,30 @@ function dump(arr,level) {
 
 Docs = new Meteor.Collection("documents", null);
 console.log("Docs has count " + Docs.find().count());
-//Temporary code.  Eventually each REST endpoint will be an Id.
 var docId;
 if (Docs.find().count() === 0) {
-    docId = Docs.insert({title:"My Doc", body:"A Test"});
-    console.log("Adding doc with id " + docId);
+  docId = Docs.insert({title:"My Doc", body:"A Test"});
+  console.log("Adding doc with id " + docId);
 } else {
-    docId = Docs.findOne()._id;
-    console.log("Found doc with id " + docId);
+  docId = Docs.findOne()._id;
+  console.log("Found doc with id " + docId);
 }
 
 
 if (Meteor.is_client) {
 
-  var doc = Docs.findOne({_id:docId});
+  var doc = Docs.findOne(docId);
   Template.hello.title = function () {
-      var aDoc = Docs.findOne({_id:docId});
+      var aDoc = Docs.findOne(docId);
       return aDoc.title;
   };
   Template.hello.greeting = function () {
-    var aDoc = Docs.findOne({_id:docId});
+    var aDoc = Docs.findOne(docId);
     return "Welcome to " + aDoc.title;
   };
 
   Template.hello.editString = function () {
-    var aDoc = Docs.findOne({_id:docId});
+    var aDoc = Docs.findOne(docId);
     return aDoc.body;
   };
 
@@ -60,16 +59,19 @@ if (Meteor.is_client) {
       // template data, if any, is available in 'this'
       doc.title += "!";
       console.log("You pressed the button. title is now " + doc.title);
-      Docs.update({_id:docId}, {title:doc.title});
-      console.log("Database title is: " +  Docs.findOne({_id:docId}).title );
+      Docs.update(docId, doc);
+      console.log("Database title is: " +  Docs.findOne(docId).title );
+      console.log("Database doc is: " + dump(Docs.findOne(docId)) );
     }
   };
 
-  $('#editArea').keyup(function() {
-      doc.body = $('editArea').val();
-      console.log("Setting doc body to :" + doc.body);
-      Docs.update({_id:docId}, {body:doc.body}); 
-      console.log("Database body is: " +  Docs.findOne({_id:docId}).body );
+  $(function() {
+      $(document).keyup(function() {
+          doc.body = $('#editArea').val();
+          console.log("Setting doc body to :" + doc.body);
+          Docs.update(docId, doc); 
+          console.log("Database body is: " +  Docs.findOne(docId).body );
+      });
   });
 }
 
