@@ -52,41 +52,38 @@ if (Meteor.is_client) {
 
   Template.edit.title = function () {
       var aDoc = Docs.findOne(Session.get("selected_doc"));
-      if (aDoc) {
-          return aDoc.title;
-      } else {
-          console.log("Can't find a doc with the id.  Docs has " + Docs.find().count() + " entries.");
-          return "(Unknown)";
-      }
+      return aDoc && aDoc.title;
   };
 
   Template.edit.editString = function () {
     var aDoc = Docs.findOne(Session.get("selected_doc"));
-    return aDoc.body;
+    return aDoc && aDoc.body;
   };
 
-/*
   Template.edit.events = {
     'click input' : function () {
       // template data, if any, is available in 'this'
-      var doc = Docs.findOne(Session.get("selected_doc"));
-      doc.title += "!";
-      console.log("You pressed the button. title is now " + doc.title);
-      Docs.update(Session.get("selected_doc"), doc);
+      var aDoc = Docs.findOne(Session.get("selected_doc"));
+      if (aDoc) {
+      aDoc.title += "!";
+      console.log("You pressed the button. title is now " + aDoc.title);
+      Docs.update(Session.get("selected_doc"), {$set: {title: aDoc.title}});
       console.log("Database title is: " +  Docs.findOne(Session.get("selected_doc")).title );
       console.log("Database doc is: " + dump(Docs.findOne(Session.get("selected_doc"))) );
+      } else {
+          console.log("Unable for find document for id " + Sesssion.get("selected_doc") + " in DB of size " + Docs.find().count());
+      }
     }
   };
 
   $(function() {
       $(document).keyup(function() {
-          doc.body = $('#editArea').val();
-          console.log("Setting doc body to :" + doc.body);
-          Docs.update(docId, doc); 
-          console.log("Database body is: " +  Docs.findOne(docId).body );
+          var newBody = $('#editArea').val();
+          console.log("Setting doc body to :" + newBody);
+          Docs.update(Session.get("selected_doc"), {$set: {body:newBody}}); 
+          console.log("Database body is: " +  Docs.findOne(Session.get("selected_doc")).body );
       });
   });
-*/
 
 }
 
