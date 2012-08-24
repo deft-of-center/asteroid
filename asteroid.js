@@ -34,12 +34,16 @@ Docs.insert({id:docId, title:"My Doc", body:"A Test"});
 if (Meteor.is_client) {
 
   doc = Docs.findOne({id:docId});
-  Template.hello.title = doc.title;
+  Template.hello.title = function () {
+      return doc.title;
+  };
   Template.hello.greeting = function () {
     return "Welcome to asteroid.";
   };
 
-  Template.hello.editString = doc.body;
+  Template.hello.editString = function () {
+      return doc.body;
+  };
 
   Template.hello.events = {
     'click input' : function () {
