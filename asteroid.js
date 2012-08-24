@@ -76,6 +76,7 @@ if (Meteor.is_client) {
     }
   };
 
+/*
   $(function() {
       $(document).keyup(function() {
           var newBody = $('#editArea').val();
@@ -84,8 +85,9 @@ if (Meteor.is_client) {
           console.log("Database body is: " +  Docs.findOne(Session.get("selected_doc")).body );
       });
   });
-
+*/
 }
+
 
 if (Meteor.is_server) {
   Meteor.startup(function () {
