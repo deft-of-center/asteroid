@@ -36,7 +36,8 @@ if (Meteor.is_client) {
   //Watch for changes in the document
   Meteor.autosubscribe(function () {
       var changes = [];
-      var doc = Docs.findOne( Session.get("selected_doc"));
+      var docId = Session.get("selected_doc");
+      var doc = Docs.findOne(docId);
       if (doc && doc.changes) {
           doc.changes.forEach( function(change) {
               console.log("Checking change", change);

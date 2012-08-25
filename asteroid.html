@@ -22,16 +22,16 @@
 </template>
 
 <template name="docs">
-<h2>Available documents</h2>
-{{#each documents}}
-  <ul>
-      {{> doc}}
-  </ul>
-{{/each}}
+    <h2>Available documents</h2>
+    {{#each documents}}
+      <ul>
+          {{> doc}}
+      </ul>
+    {{/each}}
 </template>
 
 <template name="doc">
-<li>{{title}}</li>
+    <li>{{title}}</li>
 </template>
 
 <template name="edit">
@@ -42,5 +42,5 @@
 </template>
 
 <template name="editor">
-  <div id="editor"></div>
+    <div id="editor{{docId}}"></div>
 </template>
