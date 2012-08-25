@@ -16,6 +16,7 @@
 
   {{#if has_selected }}
     {{> edit }}
+    {{> editor }}
   {{/if}}
   
 </template>
@@ -38,7 +39,8 @@
   <h4>{{docId}}</h4>
   <input type="button" value="Click" />
   {{editString}}
-  <div id="editor">some text here</div>
 </template>
 
-
+<template name="editor">
+  <div id="editor"></div>
+</template>
