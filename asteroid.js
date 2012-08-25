@@ -24,6 +24,10 @@ function dump(arr,level) {
 }
 
 
+/*
+ doc = {title: string, changes: array of change: {timestamp, user, ace_change_data} }
+ */
+
 
 Docs = new Meteor.Collection("documents");
 
@@ -34,9 +38,15 @@ if (Meteor.is_client) {
 
   Meteor.autosubscribe(function () {
       if (Session.get('selected_doc')) {
-          console.log('Autosubscribe: ' + Session.get('selected_doc'));
+          console.log('Autosubscribe: ' + Session.get('selected_doc') );
           setTimeout(function() {
-              ace.edit('editor');
+              Editor = ace.edit("editor");
+              Editor.on("change", function(e) {
+                  var change = {timestamp: new Date().getTime(), user: null,
+                      data: e.data};
+                  console.log("Recording change ", change);
+                  Docs.update(Session.get("selected_doc"), {$push: {changes: change}});
+              });
           },
           500);
       }
