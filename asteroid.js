@@ -57,8 +57,8 @@ if (Meteor.is_client) {
               console.log('Found Document ', Document);
               _.each(changes, function(change){
                   console.log("Applying change", change);
-                  Document.applyDeltas([change.data]);
                   Session.get("applied_changes").push(change.uuid);
+                  Document.applyDeltas([change.data]);
               });
           },
           500);
