@@ -9,6 +9,9 @@ Docs = new Meteor.Collection("documents");
 if (Meteor.is_client) {
 
   Meteor.startup(function () {
+      if (Session.equals("applied_changes", undefined)) {
+          Session.set("applied_changes", []);
+      }
   });
 
   //Watch for changes in selected_doc
@@ -22,6 +25,7 @@ if (Meteor.is_client) {
                   var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
                       data: e.data};
                   console.log("Recording change ", change);
+                  Session.get("applied_changes").push(change.uuid);
                   Docs.update(Session.get("selected_doc"), {$push: {changes: change}});
               });
           },
@@ -51,9 +55,6 @@ if (Meteor.is_client) {
               var EditSession = Editor.getSession();
               var Document = EditSession.getDocument();
               console.log('Found Document ', Document);
-              if (Session.equals("applied_changes", undefined)) {
-                  Session.set("applied_changes", []);
-              }
               _.each(changes, function(change){
                   console.log("Applying change", change);
                   Document.applyDeltas([change.data]);
