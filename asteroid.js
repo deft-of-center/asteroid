@@ -18,7 +18,7 @@ if (Meteor.is_client) {
           setTimeout(function() {
               Editor = ace.edit("editor");
               Editor.on("change", function(e) {
-                  var change = {timestamp: new Date().getTime(), user: null,
+                  var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
                       data: e.data};
                   console.log("Recording change ", change);
                   Docs.update(Session.get("selected_doc"), {$push: {changes: change}});
@@ -30,13 +30,26 @@ if (Meteor.is_client) {
 
   //Watch for changes in the document
   Meteor.autosubscribe(function () {
-      //30 seconds ago, for a buffer.
-      var recently = new Date().getTime() - 30*1000;
-      var changes = Docs.find(Session.get("selected_doc"), 
-        //{changes: {timestamp: {$gt: recently} } } 
-        {changes: {$slice: -10} } 
-      );
-      console.log("Found new-ish changes: ", changes);
+      var changes = [];
+      var doc = Docs.findOne( Session.get("selected_doc"));
+      if (doc && doc.changes) {
+          doc.changes.forEach( function(change) {
+              console.log("Checking change", change);
+              if (!_.include(Session.get("applied_changes"), change.uuid)) {
+                  //Not already applied
+                  changes.push(change);
+              }
+          });
+      }
+
+      console.log("Notified of changes: ", changes);
+      //Document.applyDeltas(changes)
+      _.each(changes, function(change){
+          if (Session.equals("applied_changes", undefined)) {
+              Session.set("applied_changes", []);
+          }
+          Session.get("applied_changes").push(change.uuid);
+      });
 
   });
 
