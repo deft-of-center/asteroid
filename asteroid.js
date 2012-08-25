@@ -1,28 +1,3 @@
-function dump(arr,level) {
-	var dumped_text = "";
-	if(!level) level = 0;
-	
-	//The padding given at the beginning of the line.
-	var level_padding = "";
-	for(var j=0;j<level+1;j++) level_padding += "    ";
-	
-	if(typeof(arr) == 'object') { //Array/Hashes/Objects 
-		for(var item in arr) {
-			var value = arr[item];
-			
-			if(typeof(value) == 'object') { //If it is an array,
-				dumped_text += level_padding + "'" + item + "' ...\n";
-				dumped_text += dump(value,level+1);
-			} else {
-				dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
-			}
-		}
-	} else { //Stings/Chars/Numbers etc.
-		dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
-	}
-	return dumped_text;
-}
-
 
 /*
  doc = {title: string, changes: array of change: {timestamp, user, ace_change_data} }
@@ -36,6 +11,7 @@ if (Meteor.is_client) {
   Meteor.startup(function () {
   });
 
+  //Watch for changes in selected_doc
   Meteor.autosubscribe(function () {
       if (Session.get('selected_doc')) {
           console.log('Autosubscribe: ' + Session.get('selected_doc') );
@@ -50,6 +26,18 @@ if (Meteor.is_client) {
           },
           500);
       }
+  });
+
+  //Watch for changes in the document
+  Meteor.autosubscribe(function () {
+      //30 seconds ago, for a buffer.
+      var recently = new Date().getTime() - 30*1000;
+      var changes = Docs.find(Session.get("selected_doc"), 
+        //{changes: {timestamp: {$gt: recently} } } 
+        {changes: {$slice: -10} } 
+      );
+      console.log("Found new-ish changes: ", changes);
+
   });
 
   Template.container.has_selected = function () {
