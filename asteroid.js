@@ -32,6 +32,16 @@ if (Meteor.is_client) {
   Meteor.startup(function () {
   });
 
+  Meteor.autosubscribe(function () {
+      if (Session.get('selected_doc')) {
+          console.log('Autosubscribe: ' + Session.get('selected_doc'));
+          setTimeout(function() {
+              ace.edit('editor');
+          },
+          500);
+      }
+  });
+
   Template.container.has_selected = function () {
       return !Session.equals("selected_doc", undefined);
   };
