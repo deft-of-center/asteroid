@@ -16,8 +16,9 @@ if (Meteor.is_client) {
       if (Session.get('selected_doc')) {
           console.log('Autosubscribe: ' + Session.get('selected_doc') );
           setTimeout(function() {
-              Editor = ace.edit("editor");
+              var Editor = ace.edit("editor");
               Editor.on("change", function(e) {
+                  console.log("Received change", e);
                   var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
                       data: e.data};
                   console.log("Recording change ", change);
@@ -43,13 +44,24 @@ if (Meteor.is_client) {
       }
 
       console.log("Notified of changes: ", changes);
-      //Document.applyDeltas(changes)
-      _.each(changes, function(change){
-          if (Session.equals("applied_changes", undefined)) {
-              Session.set("applied_changes", []);
-          }
-          Session.get("applied_changes").push(change.uuid);
-      });
+
+      if (changes && Session.get('selected_doc')) {
+          setTimeout(function() {
+              var Editor = ace.edit("editor");
+              var EditSession = Editor.getSession();
+              var Document = EditSession.getDocument();
+              console.log('Found Document ', Document);
+              if (Session.equals("applied_changes", undefined)) {
+                  Session.set("applied_changes", []);
+              }
+              _.each(changes, function(change){
+                  console.log("Applying change", change);
+                  Document.applyDeltas([change.data]);
+                  Session.get("applied_changes").push(change.uuid);
+              });
+          },
+          500);
+      }
 
   });
 
@@ -89,8 +101,8 @@ if (Meteor.is_client) {
       aDoc.title += "!";
       console.log("You pressed the button. title is now " + aDoc.title);
       Docs.update(Session.get("selected_doc"), {$set: {title: aDoc.title}});
-      console.log("Database title is: " +  Docs.findOne(Session.get("selected_doc")).title );
-      console.log("Database doc is: " + dump(Docs.findOne(Session.get("selected_doc"))) );
+      //console.log("Database title is: " +  Docs.findOne(Session.get("selected_doc")).title );
+      //console.log("Database doc is: " + dump(Docs.findOne(Session.get("selected_doc"))) );
       } else {
           console.log("Unable for find document for id " + Sesssion.get("selected_doc") + " in DB of size " + Docs.find().count());
       }
