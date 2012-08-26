@@ -8,6 +8,10 @@ if (Meteor.is_client) {
 
     Meteor.startup(function () {
         Session.set("applied_changes", []);
+        var changeComparator = function(change) {
+            return change.timestamp;
+        };
+        Session.set("priority_queue", new BinaryHeap(changeComparator));
 
         var docName = document.location.pathname;
         Session.set("docName", docName);
@@ -20,6 +24,16 @@ if (Meteor.is_client) {
     Meteor.autosubscribe(function () {
         var doc = Docs.findOne({name:Session.get("docName")});
         if (doc) Session.set("docId", doc._id);
+    });
+
+    Meteor.autosubscribe(function () {
+        var queue = Session.get("priority_queue");
+        console.log("Found queue", queue);
+        while (queue && queue.size && queue.size()) {
+            var change = queue.pop();
+            console.log("Applying change", change);
+            Document.applyDeltas([change.data]);
+        }
     });
     
     Template.container.events = {
@@ -80,9 +94,9 @@ if (Meteor.is_client) {
                   var Document = EditSession.getDocument();
                   console.log('Found Document ', Document);
                   _.each(changes, function(change){
-                      console.log("Applying change", change);
+                      console.log("Queuing change", change);
                       Session.get("applied_changes").push(change.uuid);
-                      Document.applyDeltas([change.data]);
+                      Session.get("priority_queue").push(change);
                   });
               }
           },
