@@ -14,7 +14,7 @@ if (Meteor.is_client) {
       }
   });
 
-  //Watch for changes in selected_doc
+  //Watch for changes in document editor
   Meteor.autosubscribe(function () {
       if (Session.get('selected_doc')) {
           var docId = Session.get('selected_doc'); 
@@ -38,7 +38,7 @@ if (Meteor.is_client) {
       }
   });
 
-  //Watch for changes in the document
+  //Watch for changes in documnent model
   Meteor.autosubscribe(function () {
       var changes = [];
       var docId = Session.get("selected_doc");
