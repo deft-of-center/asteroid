@@ -9,7 +9,7 @@ function ChangeManager(priorityFunction){
 
 ChangeManager.prototype = {
 
-  push: function(change, context) {
+  push: function(change) {
     // Add the new change to the end of the array.
     if (! (change.uuid in this.receivedIds) ) {
       console.log("Queuing change", change);
@@ -17,7 +17,7 @@ ChangeManager.prototype = {
       this.priorityQueue.push(change);
       // Allow it to bubble up.
       this.bubbleUp(this.priorityQueue.length - 1);
-      context.invalidate();
+      this.processingContext.invalidate();
     }
   },
 
@@ -102,6 +102,6 @@ ChangeManager.prototype = {
         break;
       }
     }
-  },
+  }
 
 };

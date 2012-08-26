@@ -50,7 +50,7 @@ if (Meteor.is_client) {
     Meteor.autosubscribe(function () {
         console.log("Starting processingContext with id:",  Meteor.deps.Context.current.id);
         var queue = Session.get("priority_queue");
-        if (queue && !queue.processingContext) {
+        if (queue) {
             queue.processingContext = Meteor.deps.Context.current;
             console.log("Setting processingContext id to: ", Meteor.deps.Context.current);
         }
@@ -95,12 +95,11 @@ if (Meteor.is_client) {
   Meteor.autosubscribe(function () {
       var doc = Docs.findOne(Session.get("docId"));
       if (doc && doc.changes) {
-          var context = Meteor.deps.Context.current;
           var Document = getDocument();
           if (Document) {
               doc.changes.forEach( function(change) {
                   console.log("Checking change from model: ", change);
-                  Session.get("priority_queue").push(change, context);
+                  Session.get("priority_queue").push(change);
               });
           }
       }
