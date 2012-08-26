@@ -10,16 +10,7 @@
 
 <template name="container">
 
-  <h2>Available documents</h2>
-  {{! #each documents}}
-    {{! > doc}}
-  {{! /each}}
-
-  <br />
-
-  {{! #each documents}}
     {{> editor }}
-  {{! /each}}
   
 </template>
 
@@ -31,10 +22,7 @@
   <div >
     <h2>You are editing {{title}}</h2>
     {{debug}}
-    {{> editBox }}
+    <div id="editor" class="editor"></div>
   </div>
 </template>
 
-<template name="editBox">
-    <div id="editor" class="editor"></div>
-</template>
