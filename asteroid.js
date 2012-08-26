@@ -1,8 +1,6 @@
-
 /*
- doc = {title: string, changes: array of change: {timestamp, user, ace_change_data} }
+ doc = {name: string, changes: array of change: {timestamp, user, ace_change_data} }
  */
-
 
 Docs = new Meteor.Collection("documents");
 
@@ -13,22 +11,30 @@ if (Meteor.is_client) {
 
         var docName = document.location.pathname;
         Session.set("docName", docName);
-        var doc = Docs.findOne({name:docName});
-        var docId;
-        if (doc) {
-            docId = doc._id;
-        } else {
-            docId = Docs.insert({name:docName});
-        }
-        Session.set("docId", docId); 
     });
+
+    Template.container.hasDoc = function() {
+        return !Session.equals("docId", undefined);
+    };
+
+    Meteor.autosubscribe(function () {
+        var doc = Docs.findOne({name:Session.get("docName")});
+        if (doc) Session.set("docId", doc._id);
+    });
+    
+    Template.container.events = {
+        'click input' : function () {
+            var docId = Docs.insert({name:Session.get("docName")});
+            Session.set("docId", docId); 
+        }
+    };
 
     //Watch for changes in document editor
     Meteor.autosubscribe(function () {
         var docId = Session.get("docId");
         console.log('Autosubscribe: ' + docId );
         setTimeout(function() {
-            console.log("Changing editor" + docId + " into editable field.");
+            console.log("Changing editor into editable field.");
             var editBoxes = $('#editor');
             if (editBoxes.length) {
                 var Editor = ace.edit(editBoxes[0]);
@@ -63,10 +69,9 @@ if (Meteor.is_client) {
               }
           });
       }
-
       console.log("Notified of changes: ", changes);
 
-      if (changes && Session.get('docId')) {
+      if (changes) {
           setTimeout(function() {
               var editBoxes = $('#editor');
               if (editBoxes.length) {
@@ -90,7 +95,7 @@ if (Meteor.is_client) {
       console.log("Rerendering.");
   };
 
-  Template.editor.title = function () {
+  Template.editor.docName = function () {
       return Session.get("docName");
   };
 }

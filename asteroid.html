@@ -10,17 +10,20 @@
 
 <template name="container">
 
+  {{#if hasDoc}}
     {{> editor }}
+  {{else}}
+    <h2>No document found.</h2>
+    <form>
+        <input type="button" value="Create" />
+    </form>
+  {{/if}}
   
-</template>
-
-<template name="doc">
-    <li>{{title}}</li>
 </template>
 
 <template name="editor">
   <div >
-    <h2>You are editing {{title}}</h2>
+    <h2>You are editing {{docName}}</h2>
     {{debug}}
     <div id="editor" class="editor"></div>
   </div>
