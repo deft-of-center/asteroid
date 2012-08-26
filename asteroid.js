@@ -21,15 +21,18 @@ if (Meteor.is_client) {
           console.log('Autosubscribe: ' + docId );
           setTimeout(function() {
               console.log("Changing editor" + docId + " into editable field.");
-              var Editor = ace.edit("editor"+docId);
-              Editor.on("change", function(e) {
-                  console.log("Received change", e);
-                  var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
-                      data: e.data};
-                  console.log("Recording change ", change);
-                  Session.get("applied_changes").push(change.uuid);
-                  Docs.update(Session.get("selected_doc"), {$push: {changes: change}});
-              });
+              var editBoxes = $('#' + Session.get('selected_doc') + ' .editor');
+              if (editBoxes.length) {
+                  var Editor = ace.edit(editBoxes[0]);
+                  Editor.on("change", function(e) {
+                      console.log("Received change", e);
+                      var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
+                          data: e.data};
+                      console.log("Recording change ", change);
+                      Session.get("applied_changes").push(change.uuid);
+                      Docs.update(Session.get("selected_doc"), {$push: {changes: change}});
+                  });
+              }
           },
           500);
       }
@@ -54,20 +57,27 @@ if (Meteor.is_client) {
 
       if (changes && Session.get('selected_doc')) {
           setTimeout(function() {
-              var Editor = ace.edit("editor"+Session.get('selected_doc'));
-              var EditSession = Editor.getSession();
-              var Document = EditSession.getDocument();
-              console.log('Found Document ', Document);
-              _.each(changes, function(change){
-                  console.log("Applying change", change);
-                  Session.get("applied_changes").push(change.uuid);
-                  Document.applyDeltas([change.data]);
-              });
+              var editBoxes = $('#' + Session.get('selected_doc') + ' .editor');
+              if (editBoxes.length) {
+                  var Editor = ace.edit(editBoxes[0]);
+                  var EditSession = Editor.getSession();
+                  var Document = EditSession.getDocument();
+                  console.log('Found Document ', Document);
+                  _.each(changes, function(change){
+                      console.log("Applying change", change);
+                      Session.get("applied_changes").push(change.uuid);
+                      Document.applyDeltas([change.data]);
+                  });
+              }
           },
           500);
       }
 
   });
+
+  Template.editor.debug = function () {
+      console.log("Rerendering.");
+  };
 
   Template.container.has_selected = function () {
       return !Session.equals("selected_doc", undefined);

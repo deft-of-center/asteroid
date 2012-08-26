@@ -31,6 +31,11 @@
   <div id="{{_id}}" style="display:{{display}}">
     <h2>You are editing {{title}}</h2>
     <h4>{{_id}}</h4>
-    <div id="editor{{_id}}" class="editor"></div>
+    {{debug}}
+    {{> editBox }}
   </div>
+</template>
+
+<template name="editBox">
+    <div class="editor"></div>
 </template>
