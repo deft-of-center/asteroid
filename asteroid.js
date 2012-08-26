@@ -9,9 +9,12 @@ Docs = new Meteor.Collection("documents");
 if (Meteor.is_client) {
 
   Meteor.startup(function () {
-      if (Session.equals("applied_changes", undefined)) {
-          Session.set("applied_changes", []);
+      if (Session.equals("selected_doc", undefined)) {
+          Session.set("selected_doc", "3e5d0d06-2ec6-4245-ab8a-fe813e2e6341");
       }
+      //if (Session.equals("applied_changes", undefined)) {
+          Session.set("applied_changes", []);
+      //}
   });
 
   //Watch for changes in document editor
@@ -21,16 +24,21 @@ if (Meteor.is_client) {
           console.log('Autosubscribe: ' + docId );
           setTimeout(function() {
               console.log("Changing editor" + docId + " into editable field.");
-              var editBoxes = $('#' + Session.get('selected_doc') + ' .editor');
+              //var editBoxes = $('#' + Session.get('selected_doc') + ' .editor');
+              var editBoxes = $('#editor');
               if (editBoxes.length) {
                   var Editor = ace.edit(editBoxes[0]);
                   Editor.on("change", function(e) {
-                      console.log("Received change", e);
-                      var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
-                          data: e.data};
-                      console.log("Recording change ", change);
-                      Session.get("applied_changes").push(change.uuid);
-                      Docs.update(Session.get("selected_doc"), {$push: {changes: change}});
+                      if (e.data.from_api) {
+                          console.log("Change is from api, ignoring.");
+                      } else {
+                          console.log("Received change", e);
+                          var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
+                              data: e.data};
+                          console.log("Recording change ", change);
+                          Session.get("applied_changes").push(change.uuid);
+                          Docs.update(Session.get("selected_doc"), {$push: {changes: change}});
+                      }
                   });
               }
           },
@@ -38,14 +46,14 @@ if (Meteor.is_client) {
       }
   });
 
-  //Watch for changes in documnent model
+  //Watch for changes in document model
   Meteor.autosubscribe(function () {
       var changes = [];
       var docId = Session.get("selected_doc");
       var doc = Docs.findOne(docId);
       if (doc && doc.changes) {
           doc.changes.forEach( function(change) {
-              console.log("Checking change", change);
+              console.log("Checking change from model: ", change);
               if (!_.include(Session.get("applied_changes"), change.uuid)) {
                   //Not already applied
                   changes.push(change);
@@ -57,7 +65,8 @@ if (Meteor.is_client) {
 
       if (changes && Session.get('selected_doc')) {
           setTimeout(function() {
-              var editBoxes = $('#' + Session.get('selected_doc') + ' .editor');
+              //var editBoxes = $('#' + Session.get('selected_doc') + ' .editor');
+              var editBoxes = $('#editor');
               if (editBoxes.length) {
                   var Editor = ace.edit(editBoxes[0]);
                   var EditSession = Editor.getSession();
