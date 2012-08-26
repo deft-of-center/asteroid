@@ -6,12 +6,25 @@ Docs = new Meteor.Collection("documents");
 
 if (Meteor.is_client) {
 
+    function getEditor() {
+        var editBoxes = $('#editor');
+        if (editBoxes.length) {
+            return ace.edit(editBoxes[0]);
+        }
+        return null;
+    }
+
+    function getDocument() {
+        var Editor = getEditor();
+        return Editor && Editor.getSession().getDocument();
+    }
+
     Meteor.startup(function () {
         Session.set("applied_changes", []);
         var changeComparator = function(change) {
             return change.timestamp;
         };
-        Session.set("priority_queue", new BinaryHeap(changeComparator));
+        Session.set("priority_queue", new ChangeManager(changeComparator));
 
         var docName = document.location.pathname;
         Session.set("docName", docName);
@@ -28,11 +41,18 @@ if (Meteor.is_client) {
 
     Meteor.autosubscribe(function () {
         var queue = Session.get("priority_queue");
+        if (queue && !queue.processingContext) {
+            queue.processingContext = Meteor.deps.Context.current;
+            console.log("Setting processingContext id to: ", Meteor.deps.Context.current);
+        }
         console.log("Found queue", queue);
         while (queue && queue.size && queue.size()) {
-            var change = queue.pop();
-            console.log("Applying change", change);
-            Document.applyDeltas([change.data]);
+            var Document = getDocument();
+            if (Document) {
+                var change = queue.pop();
+                console.log("Applying change", change);
+                Document.applyDeltas([change.data]);
+            }
         }
     });
     
@@ -49,9 +69,8 @@ if (Meteor.is_client) {
         console.log('Autosubscribe: ' + docId );
         setTimeout(function() {
             console.log("Changing editor into editable field.");
-            var editBoxes = $('#editor');
-            if (editBoxes.length) {
-                var Editor = ace.edit(editBoxes[0]);
+            var Editor = getEditor();
+            if (Editor) {
                 Editor.on("change", function(e) {
                     if (e.data.from_api) {
                         console.log("Change is from api, ignoring.");
@@ -60,7 +79,7 @@ if (Meteor.is_client) {
                         var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
                             data: e.data};
                         console.log("Recording change ", change);
-                        Session.get("applied_changes").push(change.uuid);
+                        Session.get("priority_queue").receivedIds[change.uuid] = true;
                         Docs.update(docId, {$push: {changes: change}});
                     }
                 });
@@ -87,15 +106,12 @@ if (Meteor.is_client) {
 
       if (changes) {
           setTimeout(function() {
-              var editBoxes = $('#editor');
-              if (editBoxes.length) {
-                  var Editor = ace.edit(editBoxes[0]);
-                  var EditSession = Editor.getSession();
-                  var Document = EditSession.getDocument();
+              var Document = getDocument();
+              if (Document) {
                   console.log('Found Document ', Document);
                   _.each(changes, function(change){
                       console.log("Queuing change", change);
-                      Session.get("applied_changes").push(change.uuid);
+                      //Session.get("applied_changes_ids").push(change.uuid);
                       Session.get("priority_queue").push(change);
                   });
               }
