@@ -3,28 +3,21 @@ function ChangeManager(priorityFunction){
   this.priorityFunction = priorityFunction;
   this.receivedIds = {};
   this.history = [];
-  this.invalid = false;
 
   this.processingContext = null;
 }
 
 ChangeManager.prototype = {
 
-  invalidate: function() {
-      this.invalid = true;
-      if (this.processingContext) {
-          this.processingContext.invalidate();
-      }
-  },
-
-  push: function(element) {
-    // Add the new element to the end of the array.
-    if (! (element.uuid in this.receivedIds) ) {
-      this.receivedIds[element.uuid] = true;
-      this.priorityQueue.push(element);
+  push: function(change, context) {
+    // Add the new change to the end of the array.
+    if (! (change.uuid in this.receivedIds) ) {
+      console.log("Queuing change", change);
+      this.receivedIds[change.uuid] = true;
+      this.priorityQueue.push(change);
       // Allow it to bubble up.
       this.bubbleUp(this.priorityQueue.length - 1);
-      this.invalidate();
+      context.invalidate();
     }
   },
 

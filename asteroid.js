@@ -34,12 +34,21 @@ if (Meteor.is_client) {
         return !Session.equals("docId", undefined);
     };
 
+    Template.container.events = {
+        'click input' : function () {
+            var docId = Docs.insert({name:Session.get("docName")});
+            Session.set("docId", docId); 
+        }
+    };
+
     Meteor.autosubscribe(function () {
         var doc = Docs.findOne({name:Session.get("docName")});
         if (doc) Session.set("docId", doc._id);
     });
 
+    // Process change queue
     Meteor.autosubscribe(function () {
+        console.log("Starting processingContext with id:",  Meteor.deps.Context.current.id);
         var queue = Session.get("priority_queue");
         if (queue && !queue.processingContext) {
             queue.processingContext = Meteor.deps.Context.current;
@@ -48,6 +57,7 @@ if (Meteor.is_client) {
         console.log("Found queue", queue);
         while (queue && queue.size && queue.size()) {
             var Document = getDocument();
+            console.log("Found Document for change processing: ", Document);
             if (Document) {
                 var change = queue.pop();
                 console.log("Applying change", change);
@@ -56,13 +66,6 @@ if (Meteor.is_client) {
         }
     });
     
-    Template.container.events = {
-        'click input' : function () {
-            var docId = Docs.insert({name:Session.get("docName")});
-            Session.set("docId", docId); 
-        }
-    };
-
     //Watch for changes in document editor
     Meteor.autosubscribe(function () {
         var docId = Session.get("docId");
@@ -90,33 +93,16 @@ if (Meteor.is_client) {
 
   //Watch for changes in document model
   Meteor.autosubscribe(function () {
-      var changes = [];
-      var docId = Session.get("docId");
-      var doc = Docs.findOne(docId);
+      var doc = Docs.findOne(Session.get("docId"));
       if (doc && doc.changes) {
-          doc.changes.forEach( function(change) {
-              console.log("Checking change from model: ", change);
-              if (!_.include(Session.get("applied_changes"), change.uuid)) {
-                  //Not already applied
-                  changes.push(change);
-              }
-          });
-      }
-      console.log("Notified of changes: ", changes);
-
-      if (changes) {
-          setTimeout(function() {
-              var Document = getDocument();
-              if (Document) {
-                  console.log('Found Document ', Document);
-                  _.each(changes, function(change){
-                      console.log("Queuing change", change);
-                      //Session.get("applied_changes_ids").push(change.uuid);
-                      Session.get("priority_queue").push(change);
-                  });
-              }
-          },
-          500);
+          var context = Meteor.deps.Context.current;
+          var Document = getDocument();
+          if (Document) {
+              doc.changes.forEach( function(change) {
+                  console.log("Checking change from model: ", change);
+                  Session.get("priority_queue").push(change, context);
+              });
+          }
       }
 
   });
