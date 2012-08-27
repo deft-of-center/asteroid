@@ -9,7 +9,21 @@ if (Meteor.is_client) {
     function getEditor() {
         var editBoxes = $('#editor');
         if (editBoxes.length) {
-            return ace.edit(editBoxes[0]);
+            var editor = ace.edit(editBoxes[0]);
+            if (editor){
+              editor.setTheme("ace/theme/twilight");
+
+
+              if (/\.(.*?)$/.exec(document.location.pathname)){
+                var extension = /\.(.*?)$/.exec(document.location.pathname)[1];
+                if (extension == "html" || extension == "htm") {
+                  editor.session.setMode("ace/mode/html");
+                } else if (extension == "js") {
+                  editor.session.setMode("ace/mode/javascript")
+                }
+              }
+            }
+            return editor;
         }
         return null;
     }
