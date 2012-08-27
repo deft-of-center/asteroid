@@ -20,10 +20,9 @@ if (Meteor.is_client) {
     }
 
     Meteor.startup(function () {
-        var changeComparator = function(change) {
+        Session.set("priority_queue", new ChangeManager(function(change) {
             return change.timestamp;
-        };
-        Session.set("priority_queue", new ChangeManager(changeComparator));
+        }));
 
         var docName = document.location.pathname.substring(1);
         Session.set("docName", docName);
