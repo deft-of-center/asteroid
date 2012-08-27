@@ -62,7 +62,7 @@ if (Meteor.is_client) {
                     if (e.data.from_api) {
                         console.log("Change is from api, ignoring.");
                     } else {
-                        var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
+                        var change = {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
                             data: e.data};
                         console.log("Recording change ", change);
                         Session.get("priority_queue").receivedIds[change.uuid] = true;
