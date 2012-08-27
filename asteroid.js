@@ -20,25 +20,13 @@ if (Meteor.is_client) {
     }
 
     Meteor.startup(function () {
-        Session.set("priority_queue", new ChangeManager(function(change) {
-            return change.timestamp;
-        }));
+        Session.set( "priority_queue", new ChangeManager( function(change) { return change.timestamp; } ));
 
         var docName = document.location.pathname.substring(1);
         Session.set("docName", docName);
     });
 
-    Template.container.hasDoc = function() {
-        return !Session.equals("docId", undefined);
-    };
-
-    Template.container.events = {
-        'click input' : function () {
-            var docId = Docs.insert({name:Session.get("docName")});
-            Session.set("docId", docId); 
-        }
-    };
-
+    // Find docId from docName
     Meteor.autosubscribe(function () {
         var doc = Docs.findOne({name:Session.get("docName")});
         if (doc) Session.set("docId", doc._id);
@@ -54,9 +42,9 @@ if (Meteor.is_client) {
         }
         console.log("Found queue", queue);
         var Document = getDocument();
-        console.log("Found Document for change processing: ", Document);
-        while (queue && queue.size && queue.size()) {
-            if (Document) {
+        if (Document) {
+            console.log("Found Document for change processing: ", Document);
+            while (queue && queue.size && queue.size()) {
                 var change = queue.pop();
                 console.log("Applying change", change);
                 Document.applyDeltas([change.data]);
@@ -66,40 +54,53 @@ if (Meteor.is_client) {
     
     //Watch for changes in document editor
     Meteor.autosubscribe(function () {
-        var Editor = getEditor();
-        if (Editor) { 
-            console.log("Changing editor into editable field.");
-            Editor.on("change", function(e) {
-                if (e.data.from_api) {
-                    console.log("Change is from api, ignoring.");
-                } else {
-                    var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
-                        data: e.data};
-                    console.log("Recording change ", change);
-                    Session.get("priority_queue").receivedIds[change.uuid] = true;
-                    Docs.update(Session.get("docId"), {$push: {changes: change}});
-                }
-            });
-        } else {
-            //Other templates haven't finished rendering; come back to this.
-            Meteor.deps.Context.current.invalidate();
+        if (Session.get("docId")) {
+            var Editor = getEditor();
+            if (Editor) { 
+                console.log("Changing editor into editable field.");
+                Editor.on("change", function(e) {
+                    if (e.data.from_api) {
+                        console.log("Change is from api, ignoring.");
+                    } else {
+                        var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
+                            data: e.data};
+                        console.log("Recording change ", change);
+                        Session.get("priority_queue").receivedIds[change.uuid] = true;
+                        Docs.update(Session.get("docId"), {$push: {changes: change}});
+                    }
+                });
+            } else {
+                //Other templates haven't finished rendering; come back to this.
+                Meteor.deps.Context.current.invalidate();
+            }
         }
     });
 
   //Watch for changes in document model
   Meteor.autosubscribe(function () {
+      console.log("Checking for changes in document model.");
       var doc = Docs.findOne(Session.get("docId"));
-      if (doc && doc.changes) {
-          var Document = getDocument();
-          if (Document) {
-              doc.changes.forEach( function(change) {
-                  //console.log("Checking change from model: ", change);
-                  Session.get("priority_queue").push(change);
-              });
-          }
+      var queue = Session.get("priority_queue");
+      console.log("Find queue ", queue, " for changes.");
+      if (doc && doc.changes && queue) {
+          doc.changes.forEach( function(change) {
+              //console.log("Checking change from model: ", change);
+              queue.push(change);
+          });
       }
 
   });
+
+    Template.container.hasDoc = function() {
+        return !Session.equals("docId", undefined);
+    };
+
+    Template.container.events = {
+        'click input' : function () {
+            var docId = Docs.insert({name:Session.get("docName")});
+            Session.set("docId", docId); 
+        }
+    };
 
   Template.editor.debug = function () {
       console.log("Rerendering.");
