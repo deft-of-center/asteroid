@@ -76,20 +76,20 @@ if (Meteor.is_client) {
         }
     });
 
-  //Watch for changes in document model
-  Meteor.autosubscribe(function () {
-      console.log("Checking for changes in document model.");
-      var doc = Docs.findOne(Session.get("docId"));
-      var queue = Session.get("priority_queue");
-      console.log("Find queue ", queue, " for changes.");
-      if (doc && doc.changes && queue) {
-          doc.changes.forEach( function(change) {
-              //console.log("Checking change from model: ", change);
-              queue.push(change);
-          });
-      }
+    //Watch for changes in document model
+    Meteor.autosubscribe(function () {
+        console.log("Checking for changes in document model.");
+        var doc = Docs.findOne(Session.get("docId"));
+        var queue = Session.get("priority_queue");
+        console.log("Find queue ", queue, " for changes.");
+        if (doc && doc.changes && queue) {
+            doc.changes.forEach( function(change) {
+                //console.log("Checking change from model: ", change);
+                queue.push(change);
+            });
+        }
 
-  });
+    });
 
     Template.container.hasDoc = function() {
         return !Session.equals("docId", undefined);
@@ -102,13 +102,13 @@ if (Meteor.is_client) {
         }
     };
 
-  Template.editor.debug = function () {
-      console.log("Rerendering.");
-  };
+    Template.editor.debug = function () {
+        console.log("Rerendering.");
+    };
 
-  Template.editor.docName = function () {
-      return Session.get("docName");
-  };
+    Template.editor.docName = function () {
+        return Session.get("docName");
+    };
 }
 
 if (Meteor.is_server) {
