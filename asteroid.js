@@ -53,9 +53,9 @@ if (Meteor.is_client) {
             console.log("Setting processingContext id to: ", Meteor.deps.Context.current);
         }
         console.log("Found queue", queue);
+        var Document = getDocument();
+        console.log("Found Document for change processing: ", Document);
         while (queue && queue.size && queue.size()) {
-            var Document = getDocument();
-            console.log("Found Document for change processing: ", Document);
             if (Document) {
                 var change = queue.pop();
                 console.log("Applying change", change);
@@ -66,27 +66,24 @@ if (Meteor.is_client) {
     
     //Watch for changes in document editor
     Meteor.autosubscribe(function () {
-        var docId = Session.get("docId");
-        console.log('Autosubscribe: ' + docId );
-        setTimeout(function() {
+        var Editor = getEditor();
+        if (Editor) { 
             console.log("Changing editor into editable field.");
-            var Editor = getEditor();
-            if (Editor) {
-                Editor.on("change", function(e) {
-                    if (e.data.from_api) {
-                        console.log("Change is from api, ignoring.");
-                    } else {
-                        console.log("Received change", e);
-                        var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
-                            data: e.data};
-                        console.log("Recording change ", change);
-                        Session.get("priority_queue").receivedIds[change.uuid] = true;
-                        Docs.update(docId, {$push: {changes: change}});
-                    }
-                });
-            }
-        },
-        500);
+            Editor.on("change", function(e) {
+                if (e.data.from_api) {
+                    console.log("Change is from api, ignoring.");
+                } else {
+                    var change = {timestamp: new Date().getTime(), user: null, uuid: guidGenerator(),
+                        data: e.data};
+                    console.log("Recording change ", change);
+                    Session.get("priority_queue").receivedIds[change.uuid] = true;
+                    Docs.update(Session.get("docId"), {$push: {changes: change}});
+                }
+            });
+        } else {
+            //Other templates haven't finished rendering; come back to this.
+            Meteor.deps.Context.current.invalidate();
+        }
     });
 
   //Watch for changes in document model
@@ -96,7 +93,7 @@ if (Meteor.is_client) {
           var Document = getDocument();
           if (Document) {
               doc.changes.forEach( function(change) {
-                  console.log("Checking change from model: ", change);
+                  //console.log("Checking change from model: ", change);
                   Session.get("priority_queue").push(change);
               });
           }
