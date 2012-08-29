@@ -19,7 +19,7 @@ if (Meteor.is_client) {
                 if (extension == "html" || extension == "htm") {
                   editor.session.setMode("ace/mode/html");
                 } else if (extension == "js") {
-                  editor.session.setMode("ace/mode/javascript")
+                  editor.session.setMode("ace/mode/javascript");
                 }
               }
             }
@@ -38,6 +38,7 @@ if (Meteor.is_client) {
 
         var docName = document.location.pathname.substring(1);
         Session.set("docName", docName);
+        Meteor.flush();
     });
 
     // Find docId from docName
