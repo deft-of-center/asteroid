@@ -42,6 +42,7 @@ ChangeGlommer.prototype = {
 
                     change = this.combine_changes(change, next_change);
                 } else {
+                    console.log("Pushing glommed change " + JSON.stringify(change));
                     this.glommed_queue.push(change);
                     change = next_change;
                 }
@@ -68,7 +69,7 @@ ChangeGlommer.prototype = {
             console.log("Users are not equal, returning false.");
             return false;
         }
-        if ( (change2.timestamp - change1.timestamp) < this.reasonable_pause_ms ) {
+        if ( (change2.timestamp - change1.timestamp) > this.reasonable_pause_ms ) {
             console.log("Timestamps are too far apart, returning false.");
             return false;
         }
