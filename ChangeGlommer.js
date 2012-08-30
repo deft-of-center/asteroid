@@ -1,7 +1,7 @@
 
 console.log("Loading ChangeGlommer");
 //Default chunking period of changes, in ms
-var GLOMMER_DEFAULT_REASONABLE_PAUSE = 400;
+var GLOMMER_DEFAULT_REASONABLE_PAUSE = 600;
 
 var INSERT = 'insertText';
 
@@ -59,8 +59,8 @@ ChangeGlommer.prototype = {
     },
 
     should_combine: function(change1, change2) {
-        //console.log("Checking should_combined for change1: " + JSON.stringify(change1) +
-                //" and change2: " + JSON.stringify(change2));
+        console.log("Checking should_combined for change1: " + JSON.stringify(change1) +
+                " and change2: " + JSON.stringify(change2));
         if (!change2) {
             console.log("No change2, returning false.");
             return false;
@@ -70,7 +70,7 @@ ChangeGlommer.prototype = {
             return false;
         }
         if ( (change2.timestamp - change1.timestamp) > this.reasonable_pause_ms ) {
-            console.log("Timestamps are too far apart, returning false.");
+            console.log("Timestamps are further apart than " + this.reasonable_pause_ms +", returning false.");
             return false;
         }
 

@@ -1,4 +1,5 @@
 var assert = require("assert");
+var should = require("should");
 var Glommer = require('./../ChangeGlommer.js');
 
 console.log("Starting tests.");
@@ -41,7 +42,7 @@ describe('ChangeGlommer', function() {
 
     describe('Glommer', function() {
         it ('should glom c and a to single change', function(done) {
-            var glommer = new ChangeGlommer(200, [function() {
+            var glommer = new ChangeGlommer(null, [function() {
                 assert(glommer.shift());
                 assert( !glommer.shift());
                 console.log("Calling done.");
@@ -52,7 +53,7 @@ describe('ChangeGlommer', function() {
         });
 
         it ('should glom c and a to ca', function(done) {
-            var glommer = new ChangeGlommer(200, [function() {
+            var glommer = new ChangeGlommer(null, [function() {
                 var change = glommer.shift();
                 console.log("Found glommed_change: " + JSON.stringify(change));
                 assert.equal(change.data.action, 'insertText');
@@ -67,7 +68,7 @@ describe('ChangeGlommer', function() {
         });
 
         it ('should glom c + a + t to cat', function(done) {
-            var glommer = new ChangeGlommer(200, [function() {
+            var glommer = new ChangeGlommer(null, [function() {
                 var change = glommer.shift();
                 assert.equal(change.data.action, 'insertText');
                 assert.equal(change.data.text, 'cat');
@@ -81,12 +82,13 @@ describe('ChangeGlommer', function() {
         });
 
         it ('should glom c + a + ^h to c', function(done) {
-            var glommer = new ChangeGlommer(200, [function() {
+            var glommer = new ChangeGlommer(null, [function() {
                 var change = glommer.shift();
                 assert.equal(change.data.action, 'insertText');
                 assert.equal(change.data.text, 'c');
                 assert.equal(change.data.range.start, c.data.range.start);
                 assert.equal(change.data.range.end, c.data.range.end);
+                assert.not.exists(glommer.shift());
                 done();
             }]);
             glommer.push(c);
@@ -95,10 +97,10 @@ describe('ChangeGlommer', function() {
         });
 
         it ('should glom c + ^h to null', function(done) {
-            var glommer = new ChangeGlommer(200, [function() {
+            var glommer = new ChangeGlommer(null, [function() {
                 var change = glommer.shift();
                 console.log("************Null test found change " + JSON.stringify(change));
-                assert.not.exists(change);
+                should.not.exist(change);
                 done();
             }]);
             glommer.push(c);
@@ -106,7 +108,7 @@ describe('ChangeGlommer', function() {
         });
 
         it ('should glom ^h + ^h + ^h to ^h^h^h', function(done) {
-            var glommer = new ChangeGlommer(200, [function() {
+            var glommer = new ChangeGlommer(null, [function() {
                 var change = glommer.shift();
                 assert.equal(change.data.action, 'removeText');
                 assert.equal(change.data.text, 'cax');
@@ -120,7 +122,7 @@ describe('ChangeGlommer', function() {
         });
 
         it ('should glom c + ^h + ^h to ^h', function(done) {
-            var glommer = new ChangeGlommer(200, [function() {
+            var glommer = new ChangeGlommer(null, [function() {
                 var change = glommer.shift();
                 assert.equal(change.data.action, 'removeText');
                 assert.equal(change.data.text, 'a');
@@ -134,7 +136,7 @@ describe('ChangeGlommer', function() {
         });
 
         it ('should not glom c and a if separated by 1s', function(done) {
-            var glommer = new ChangeGlommer(200, [function() {
+            var glommer = new ChangeGlommer(null, [function() {
                 var change_1 = glommer.shift();
                 console.log("First change: " + JSON.stringify(change_1));
                 var change_2 = glommer.shift();
@@ -143,7 +145,7 @@ describe('ChangeGlommer', function() {
                 console.log("Third change: " + JSON.stringify(change_3));
                 assertEqualChange(change_1, c);
                 assertEqualChange(change_2, a);
-                assert.not.exists(change_3);
+                should.not.exist(change_3);
                 done();
             }]);
             glommer.push(c);
