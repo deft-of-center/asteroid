@@ -130,7 +130,7 @@ if (Meteor.is_client) {
                 Docs.update(Session.get("docId"), {$push: {changes: change}});
             }
         });
-        editor.setTheme("ace/theme/twilight");
+        //editor.setTheme("ace/theme/twilight");
         var extensions = /\.(\w*?)$/.exec(Session.get("docName"));
         if (extensions) {
             var extension = extensions[1];
