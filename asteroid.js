@@ -9,21 +9,7 @@ if (Meteor.is_client) {
     function getEditor() {
         var editBoxes = $('#editor');
         if (editBoxes.length) {
-            var editor = ace.edit(editBoxes[0]);
-            if (editor){
-              editor.setTheme("ace/theme/twilight");
-
-
-              if (/\.(.*?)$/.exec(document.location.pathname)){
-                var extension = /\.(.*?)$/.exec(document.location.pathname)[1];
-                if (extension == "html" || extension == "htm") {
-                  editor.session.setMode("ace/mode/html");
-                } else if (extension == "js") {
-                  editor.session.setMode("ace/mode/javascript");
-                }
-              }
-            }
-            return editor;
+            return ace.edit(editBoxes[0]);
         }
         return null;
     }
@@ -68,28 +54,28 @@ if (Meteor.is_client) {
     });
     
     //Watch for changes in document editor
-    Meteor.autosubscribe(function () {
-        if (Session.get("docId")) {
-            var Editor = getEditor();
-            if (Editor) { 
-                console.log("Changing editor into editable field.");
-                Editor.on("change", function(e) {
-                    if (e.data.from_api) {
-                        console.log("Change is from api, ignoring.");
-                    } else {
-                        var change = {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
-                            data: e.data};
-                        console.log("Recording change ", change);
-                        Session.get("priority_queue").receivedIds[change.uuid] = true;
-                        Docs.update(Session.get("docId"), {$push: {changes: change}});
-                    }
-                });
-            } else {
-                //Other templates haven't finished rendering; come back to this.
-                Meteor.deps.Context.current.invalidate();
-            }
-        }
-    });
+    //Meteor.autosubscribe(function () {
+        //if (Session.get("docId")) {
+            //var Editor = getEditor();
+            //if (Editor) { 
+                //console.log("Changing editor into editable field.");
+                //Editor.on("change", function(e) {
+                    //if (e.data.from_api) {
+                        //console.log("Change is from api, ignoring.");
+                    //} else {
+                        //var change = {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
+                            //data: e.data};
+                        //console.log("Recording change ", change);
+                        //Session.get("priority_queue").receivedIds[change.uuid] = true;
+                        //Docs.update(Session.get("docId"), {$push: {changes: change}});
+                    //}
+                //});
+            //} else {
+                ////Other templates haven't finished rendering; come back to this.
+                //Meteor.deps.Context.current.invalidate();
+            //}
+        //}
+    //});
 
     //Watch for changes in document model
     Meteor.autosubscribe(function () {
@@ -124,6 +110,51 @@ if (Meteor.is_client) {
     Template.editor.docName = function () {
         return Session.get("docName");
     };
+
+    Template.editor.rendered = function () {
+        console.log("Calling editor.rendered");
+        var editor = getEditor();
+        if (!editor) {
+            console.error("ERROR: Can't find editor after rendering.");
+            return;
+        }
+        console.log("Changing editor into editable field.");
+        editor.on("change", function(e) {
+            if (e.data.from_api) {
+                console.log("Change is from api, ignoring.");
+            } else {
+                var change = {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
+                    data: e.data};
+                console.log("Recording change ", change);
+                Session.get("priority_queue").receivedIds[change.uuid] = true;
+                Docs.update(Session.get("docId"), {$push: {changes: change}});
+            }
+        });
+        editor.setTheme("ace/theme/twilight");
+        var extensions = /\.(\w*?)$/.exec(Session.get("docName"));
+        if (extensions) {
+            var extension = extensions[1];
+            var mode = null;
+            switch (extension) {
+                case "html":
+                case "htm":
+                    mode = "html";
+                    break;
+                case "js":
+                    mode = "javascript";
+                    break;
+                default:
+                    mode = null;
+                    break;
+            }
+            console.log("Found mode " + mode + " from extension " + extension);
+            if (mode) {
+                editor.session.setMode("ace/mode/" + mode);
+            }
+        }
+    };
+
+
 }
 
 if (Meteor.is_server) {
