@@ -1,8 +1,11 @@
 <head>
   <title>asteroid</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet">  
 </head>
 
 <body>
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <script src="js/bootstrap.min.js"></script>
   <div id="container">
       {{> container}}
   </div>
@@ -22,10 +25,14 @@
 </template>
 
 <template name="editor">
-  <div >
-    <h2>You are editing {{docName}}</h2>
-    {{debug}}
-    <div id="editor" class="editor"></div>
-  </div>
+      <div class="row">
+          <div class="span12">
+              <h2>You are editing {{docName}}</h2>
+              {{debug}}
+          </div>
+      </div>
+    <div class="row">
+      <div id="editor" class="span9 editor"></div>
+    </div>
 </template>
 
