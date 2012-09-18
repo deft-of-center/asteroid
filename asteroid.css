@@ -1,7 +1,11 @@
 /* CSS declarations go here */
 
+body {
+    padding: 8px;
+}
+
 .editor {
-        position: absolute;
-        width: 500px;
-        height: 400px;
+    position: absolute;
+    width: 500px;
+    height: 400px;
 }

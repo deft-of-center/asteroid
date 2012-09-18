@@ -1,17 +1,37 @@
 <head>
-  <title>asteroid</title>
+  <title>Asteroid</title>
   <link href="css/bootstrap.min.css" rel="stylesheet">  
 </head>
 
 <body>
-  <script src="http://code.jquery.com/jquery-latest.js"></script>
-  <script src="js/bootstrap.min.js"></script>
-  <div id="container">
-      {{> container}}
-  </div>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <div id="container">
+        {{> navbar}}
+        {{> container}}
+    </div>
 </body>
 
+<template name="navbar">
+    <div class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="#">Asteroid</a>
+            <ul class="nav pull-right">
+                <li class="dropdown">
+                <a id="accountDropdown" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Account <b class="caret"></b></a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="accountDropdown">
+                    <li><a tabindex="-1" href="http://google.com">Settings</a></li>
+                    <li class="divider"></li>
+                    <li><a tabindex="-1" href="#anotherAction">Logout</a></li>
+                </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</template>
+
 <template name="container">
+<div></div>
 
   {{#if hasDoc}}
     {{> editor }}
@@ -25,14 +45,14 @@
 </template>
 
 <template name="editor">
-      <div class="row">
-          <div class="span12">
-              <h2>You are editing {{docName}}</h2>
-              {{debug}}
-          </div>
-      </div>
-    <div class="row">
-      <div id="editor" class="span9 editor"></div>
+<div class="row">
+    <div class="span12">
+        <h2>You are editing {{docName}}</h2>
+        {{debug}}
     </div>
+</div>
+<div class="row">
+    <div id="editor" class="span9 editor"></div>
+</div>
 </template>
 
