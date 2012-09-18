@@ -41,9 +41,9 @@ if (Meteor.is_client) {
         var doc = Docs.findOne(Session.get("docId"));
         if (doc && doc.changes) {
             doc.changes.forEach( function(change) {
-                console.log("Checking change " + change.uuid + " from model: ", change);
+                //console.log("Checking change " + change.uuid + " from model: ", change);
                 if ( !(change.uuid in Session.get("receivedIds")) ) {
-                    console.log("Change " + change.uuid + " being inserted into the changeQueue.");
+                    //console.log("Change " + change.uuid + " being inserted into the changeQueue.");
                     Session.get("receivedIds")[change.uuid] = true;
                     changeQueue.insert(change);
                 }
@@ -54,31 +54,66 @@ if (Meteor.is_client) {
     
     //Process changes in changeQueue
     Meteor.autosubscribe(function () {
-        console.log("changeQueue now has " + changeQueue.find().count() + " entries.");
+        //console.log("changeQueue now has " + changeQueue.find().count() + " entries.");
         var Document = getDocument();
         if (Document) {
             console.log("Found Document for change processing: ", Document);
             var change = changeQueue.findOne({}, {sort: {timestamp: 1}});
             if (change) {
-                console.log("Applying change", change);
+                //console.log("Applying change", change);
                 Document.applyDeltas([change.data]);
-                console.log("Removing change with timestamp " + change.timestamp);
+                //console.log("Removing change with timestamp " + change.timestamp);
                 changeQueue.remove(change._id);
             }
         }
 
     });
     
+    Template.navbar.account = function() {
+        return Session.get("user");
+    };
+
+    Template.navbar.events({
+        'click #logoutButton' : function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            Session.set('user', null);
+        }
+    });
+
+    Template.signinModal.events({
+        'click #signInButton' : function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            $('#myModal').modal('hide');
+            //TODO: Sign in to github.
+            var paramArray = $('#signInForm').serializeArray();
+            var username = null;
+            for (var i in paramArray) {
+                var field = paramArray[i];
+                if (field['name'] == 'username') {
+                    username = field['value'];
+                    break;
+                }
+            }
+            if (username) {
+                console.log("Found username " + username);
+                Session.set("user", {username:username});
+            }
+        }
+    });
+
     Template.container.hasDoc = function() {
         return !Session.equals("docId", undefined);
     };
 
-    Template.container.events = {
-        'click input' : function () {
+    Template.container.events({
+        'click input#createDocumentButton' : function (event) {
             var docId = Docs.insert({name:Session.get("docName")});
-            Session.set("docId", docId); 
+            Session.set("docId", docId);
+            event.stopPropagation();
         }
-    };
+    });
 
     Template.editor.debug = function () {
         console.log("Rerendering.");
