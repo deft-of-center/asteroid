@@ -4,8 +4,9 @@ body {
     padding: 8px;
 }
 
+
 .editor {
     position: absolute;
-    /*width: 500px;*/
+    width: 600px;
     height: 400px;
 }

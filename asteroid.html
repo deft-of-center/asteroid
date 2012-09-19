@@ -6,7 +6,7 @@
 <body>
     <script src="http://code.jquery.com/jquery-latest.js"></script>
     <script src="js/bootstrap.min.js"></script>
-    <div id="container">
+    <div id="container" class="container">
         {{> navbar}}
         {{> signinModal}}
         {{> container}}
@@ -70,13 +70,11 @@
 
 <template name="editor">
     {{debug}}
-    <div class="span9">
-        <div class="well">
-            <h2>You are editing {{docName}}</h2>
-        </div>
-        <div class="row">
-            <div id="editor" class="span9 editor"></div>
-        </div>
+    <div class="well">
+        <h2>You are editing {{docName}}</h2>
+    </div>
+    <div class="container">
+        <div id="editor" class="editor"></div>
     </div>
 </template>
 
