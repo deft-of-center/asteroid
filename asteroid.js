@@ -7,8 +7,9 @@ Docs = new Meteor.Collection("documents");
 if (Meteor.is_client) {
 
     //ChangeQueue = [ {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
-    //                data: e.data, applied:false};
+    //                data: e.data};
     var ChangeQueue = new Meteor.Collection(null);
+    var appliedChanges = {}; // {uuid:true}
 
     function getEditor() {
         var editBoxes = $('#editor');
@@ -44,9 +45,8 @@ if (Meteor.is_client) {
         var doc = Docs.findOne(Session.get("docId"));
         if (doc && doc.changes) {
             doc.changes.forEach( function(change) {
-                if ( !ChangeQueue.findOne({uuid:change.uuid}) ) {
+                if ( !(change.uuid in appliedChanges) ) {
                     //console.log("Change " + change.uuid + " being inserted into the ChangeQueue.");
-                    change.applied = false;
                     ChangeQueue.insert(change);
                 }
             });
@@ -56,17 +56,18 @@ if (Meteor.is_client) {
     
     //Process changes in ChangeQueue
     Meteor.autosubscribe(function () {
-      //console.log("ChangeQueue now has " + ChangeQueue.find({applied:false}).count() + " pending entries.");
+      //console.log("ChangeQueue now has " + ChangeQueue.find().count() + " pending entries.");
       //This has to be here, to retrigger if the Document doesn't load the first time.
-      var change = ChangeQueue.findOne({applied:false}, {sort: {timestamp: 1}});
+      var change = ChangeQueue.findOne({}, {sort: {timestamp: 1}});
       var Document = getDocument();
       if (Document) {
         //console.log("Found Document for change processing: ", Document);
-        if (change) {
+        if (change && !(change.uuid in appliedChanges)) {
           //console.log("Applying change", change);
           Document.applyDeltas([change.data]);
+          appliedChanges[change.uuid] = true;
           //console.log("Removing change with timestamp " + change.timestamp);
-          ChangeQueue.update({uuid:change.uuid}, {$set: {applied:true}});
+          ChangeQueue.remove({uuid:change.uuid});
         }
       }
 
@@ -144,10 +145,9 @@ if (Meteor.is_client) {
                 0; //Hack to hide syntax warning.
             } else {
                 var change = {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
-                    data: e.data, applied:true};
+                    data: e.data};
                 //console.log("Recording change ", change);
-                ChangeQueue.insert(change);
-                delete change.applied;
+                appliedChanges[change.uuid] = true;
                 Docs.update(Session.get("docId"), {$push: {changes: change}});
 
             }
