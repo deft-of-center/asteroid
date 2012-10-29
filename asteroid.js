@@ -32,6 +32,7 @@ if (Meteor.is_client) {
     // Find docId from docName
     Meteor.autosubscribe(function () {
         var doc = Docs.findOne({name:Session.get("docName")});
+        console.log("Found document:", doc);
         if (doc) Session.set("docId", doc._id);
     });
 
@@ -109,9 +110,13 @@ if (Meteor.is_client) {
 
     Template.container.events({
         'click input#createDocumentButton' : function (event) {
-            var docId = Docs.insert({name:Session.get("docName")});
-            Session.set("docId", docId);
-            event.stopPropagation();
+          console.log("Inserting document for", Session.get("docName"));
+          var docId = Docs.insert({name:Session.get("docName")}, function(err){
+            if (err) console.log("Error inserting " + Session.get("docName"), err);
+          });
+          console.log("Inserted doc with id", docId);
+          Session.set("docId", docId);
+          event.stopPropagation();
         }
     });
 
@@ -174,4 +179,11 @@ if (Meteor.is_client) {
 if (Meteor.is_server) {
   Meteor.startup(function () {
   });
+
+  Docs.allow({
+    insert: function(userId, doc) { return true; },
+    update: function(userId, docs, fields, modifier) { return true; },
+    remove: function(userId, docs) { return true; }
+  });
+
 }
