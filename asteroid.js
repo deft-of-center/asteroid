@@ -34,18 +34,18 @@ if (Meteor.is_client) {
     // Find docId from docName
     Meteor.autosubscribe(function () {
         var doc = Docs.findOne({name:Session.get("docName")});
-        console.log("Found document:", doc);
+        //console.log("Found document:", doc);
         if (doc) Session.set("docId", doc._id);
     });
 
     //Watch for changes in document model
     Meteor.autosubscribe(function () {
-        console.log("Checking for changes in document model.");
+        //console.log("Checking for changes in document model.");
         var doc = Docs.findOne(Session.get("docId"));
         if (doc && doc.changes) {
             doc.changes.forEach( function(change) {
                 if ( !ChangeQueue.findOne({uuid:change.uuid}) ) {
-                    console.log("Change " + change.uuid + " being inserted into the ChangeQueue.");
+                    //console.log("Change " + change.uuid + " being inserted into the ChangeQueue.");
                     change.applied = false;
                     ChangeQueue.insert(change);
                 }
@@ -56,18 +56,19 @@ if (Meteor.is_client) {
     
     //Process changes in ChangeQueue
     Meteor.autosubscribe(function () {
-        console.log("ChangeQueue now has " + ChangeQueue.find({applied:false}).count() + " pending entries.");
-        var Document = getDocument();
-        if (Document) {
-            console.log("Found Document for change processing: ", Document);
-            var change = ChangeQueue.findOne({applied:false}, {sort: {timestamp: 1}});
-            if (change) {
-                console.log("Applying change", change);
-                Document.applyDeltas([change.data]);
-                //console.log("Removing change with timestamp " + change.timestamp);
-                ChangeQueue.update({uuid:change.uuid}, {$set: {applied:true}});
-            }
+      //console.log("ChangeQueue now has " + ChangeQueue.find({applied:false}).count() + " pending entries.");
+      //This has to be here, to retrigger if the Document doesn't load the first time.
+      var change = ChangeQueue.findOne({applied:false}, {sort: {timestamp: 1}});
+      var Document = getDocument();
+      if (Document) {
+        //console.log("Found Document for change processing: ", Document);
+        if (change) {
+          //console.log("Applying change", change);
+          Document.applyDeltas([change.data]);
+          //console.log("Removing change with timestamp " + change.timestamp);
+          ChangeQueue.update({uuid:change.uuid}, {$set: {applied:true}});
         }
+      }
 
     });
     
@@ -115,7 +116,7 @@ if (Meteor.is_client) {
           var docId = Docs.insert({name:Session.get("docName")}, function(err){
             if (err) console.log("Error inserting " + Session.get("docName"), err);
           });
-          console.log("Inserted doc with id", docId);
+          //console.log("Inserted doc with id", docId);
           Session.set("docId", docId);
           event.stopPropagation();
         }
@@ -139,12 +140,12 @@ if (Meteor.is_client) {
         console.log("Changing editor into editable field.");
         editor.on("change", function(e) {
             if (e.data.from_api) {
-                console.log("Change is from api, ignoring.");
+                //console.log("Change is from api, ignoring.");
                 0; //Hack to hide syntax warning.
             } else {
                 var change = {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
                     data: e.data, applied:true};
-                console.log("Recording change ", change);
+                //console.log("Recording change ", change);
                 ChangeQueue.insert(change);
                 delete change.applied;
                 Docs.update(Session.get("docId"), {$push: {changes: change}});
