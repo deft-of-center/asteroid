@@ -6,7 +6,9 @@ Docs = new Meteor.Collection("documents");
 
 if (Meteor.is_client) {
 
-    var changeQueue = new Meteor.Collection(null);
+    //ChangeQueue = [ {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
+    //                data: e.data, applied:false};
+    var ChangeQueue = new Meteor.Collection(null);
 
     function getEditor() {
         var editBoxes = $('#editor');
@@ -42,29 +44,28 @@ if (Meteor.is_client) {
         var doc = Docs.findOne(Session.get("docId"));
         if (doc && doc.changes) {
             doc.changes.forEach( function(change) {
-                //console.log("Checking change " + change.uuid + " from model: ", change);
-                if ( !(change.uuid in Session.get("receivedIds")) ) {
-                    //console.log("Change " + change.uuid + " being inserted into the changeQueue.");
-                    Session.get("receivedIds")[change.uuid] = true;
-                    changeQueue.insert(change);
+                if ( !ChangeQueue.findOne({uuid:change.uuid}) ) {
+                    console.log("Change " + change.uuid + " being inserted into the ChangeQueue.");
+                    change.applied = false;
+                    ChangeQueue.insert(change);
                 }
             });
         }
 
     });
     
-    //Process changes in changeQueue
+    //Process changes in ChangeQueue
     Meteor.autosubscribe(function () {
-        //console.log("changeQueue now has " + changeQueue.find().count() + " entries.");
+        console.log("ChangeQueue now has " + ChangeQueue.find({applied:false}).count() + " pending entries.");
         var Document = getDocument();
         if (Document) {
             console.log("Found Document for change processing: ", Document);
-            var change = changeQueue.findOne({}, {sort: {timestamp: 1}});
+            var change = ChangeQueue.findOne({applied:false}, {sort: {timestamp: 1}});
             if (change) {
-                //console.log("Applying change", change);
+                console.log("Applying change", change);
                 Document.applyDeltas([change.data]);
                 //console.log("Removing change with timestamp " + change.timestamp);
-                changeQueue.remove(change._id);
+                ChangeQueue.update({uuid:change.uuid}, {$set: {applied:true}});
             }
         }
 
@@ -138,15 +139,16 @@ if (Meteor.is_client) {
         console.log("Changing editor into editable field.");
         editor.on("change", function(e) {
             if (e.data.from_api) {
-                //console.log("Change is from api, ignoring.");
+                console.log("Change is from api, ignoring.");
                 0; //Hack to hide syntax warning.
             } else {
                 var change = {timestamp: new Date().getTime(), user: null, uuid: Meteor.uuid(),
-                    data: e.data};
+                    data: e.data, applied:true};
                 console.log("Recording change ", change);
-                //Session.get("priority_queue").receivedIds[change.uuid] = true;
-                Session.get("receivedIds")[change.uuid] = true;
+                ChangeQueue.insert(change);
+                delete change.applied;
                 Docs.update(Session.get("docId"), {$push: {changes: change}});
+
             }
         });
         //editor.setTheme("ace/theme/twilight");
